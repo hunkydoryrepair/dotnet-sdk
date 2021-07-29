@@ -2,10 +2,9 @@
 
   <PropertyGroup>
     <VersionPrefix>3.0.0</VersionPrefix>
-    <TargetFramework>netstandard1.3</TargetFramework>
-    <AssemblyName>GlobalPayments.Api</AssemblyName>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>GlobalPayments.Grindless.Api</AssemblyName>
     <PackageId>GlobalPayments.Api</PackageId>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
@@ -19,7 +18,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CoreCompat.System.Drawing" Version="1.0.0-beta006" />
+    <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+	<PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Net.Requests" Version="4.3.0" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
