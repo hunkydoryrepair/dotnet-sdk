@@ -1,11 +1,13 @@
 ﻿using GlobalPayments.Api.Builders;
 using GlobalPayments.Api.Entities;
 using GlobalPayments.Api.Mapping;
+using GlobalPayments.Api.PaymentMethods;
 using GlobalPayments.Api.Utils;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 
 namespace GlobalPayments.Api.Gateways {
     internal partial class GpApiConnector : RestGateway, IPaymentGateway, IReportingService, ISecure3dProvider {
@@ -19,6 +21,8 @@ namespace GlobalPayments.Api.Gateways {
         public Language Language { get; set; }
         public string Country { get; set; }
         public string[] Permissions { get; set; }
+        public string MerchantContactUrl { get; set; }
+        public string MerchantId { get; set; }
 
         private string _AccessToken;
         public string AccessToken {
@@ -95,19 +99,41 @@ namespace GlobalPayments.Api.Gateways {
 
         internal GpApiConnector() {
             // Set required api version header
-            Headers["X-GP-Version"] = "2020-12-22";
+            Headers["X-GP-Version"] = "2021-03-22";
             Headers["Accept"] = "application/json";
             Headers["Accept-Encoding"] = "gzip";
+            Headers["x-gp-sdk"] = "net;version="+getReleaseVersion();
+        }
+
+        //Get the SDK release version
+        private string getReleaseVersion()
+        {
+            try
+            {
+                return Assembly.Load(new AssemblyName("GlobalPayments.Api"))?.GetName()?.Version?.ToString();
+            }
+            catch(Exception ex)
+            {
+                return string.Empty;
+            }
         }
 
         public void SignIn() {
-            var response = GetAccessToken();
+            if (string.IsNullOrEmpty(_AccessToken))
+            {
+                var response = GetAccessToken();
 
-            AccessToken = response.Token;
-            DataAccountName = response.DataAccountName;
-            DisputeManagementAccountName = response.DisputeManagementAccountName;
-            TokenizationAccountName = response.TokenizationAccountName;
-            TransactionProcessingAccountName = response.TransactionProcessingAccountName;
+                AccessToken = response.Token;
+
+                if (string.IsNullOrEmpty(_DataAccountName))
+                    DataAccountName = response.DataAccountName;
+                if (string.IsNullOrEmpty(_DisputeManagementAccountName))
+                    DisputeManagementAccountName = response.DisputeManagementAccountName;
+                if (string.IsNullOrEmpty(_TokenizationAccountName))
+                    TokenizationAccountName = response.TokenizationAccountName;
+                if (string.IsNullOrEmpty(_TransactionProcessingAccountName))
+                    TransactionProcessingAccountName = response.TransactionProcessingAccountName;
+            }
         }
 
         public void SignOut() {
@@ -176,7 +202,9 @@ namespace GlobalPayments.Api.Gateways {
 
             if (request != null) {
                 var response = DoTransaction(request.Verb, request.Endpoint, request.RequestBody, request.QueryStringParams, builder.IdempotencyKey);
-
+                if (builder.PaymentMethod is AlternativePaymentMethod) {
+                    return GpApiMapping.MapResponseAPM(response);
+                }
                 return GpApiMapping.MapResponse(response);
             }
             return null;
@@ -191,7 +219,9 @@ namespace GlobalPayments.Api.Gateways {
 
             if (request != null) {
                 var response = DoTransaction(request.Verb, request.Endpoint, request.RequestBody, request.QueryStringParams, builder.IdempotencyKey);
-
+                if (builder.PaymentMethod is TransactionReference && builder.PaymentMethod.PaymentMethodType == PaymentMethodType.APM) {
+                    return GpApiMapping.MapResponseAPM(response);
+                }
                 return GpApiMapping.MapResponse(response);
             }
             return null;

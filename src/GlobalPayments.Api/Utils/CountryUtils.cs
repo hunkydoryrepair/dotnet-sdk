@@ -1,6 +1,7 @@
 ﻿using GlobalPayments.Api.Entities;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GlobalPayments.Api.Utils {
     public class CountryUtils {
@@ -171,6 +172,7 @@ namespace GlobalPayments.Api.Utils {
             countryCodeMapByCountry.Add("Nauru", "NR");
             countryCodeMapByCountry.Add("Nepal", "NP");
             countryCodeMapByCountry.Add("Netherlands", "NL");
+            countryCodeMapByCountry.Add("Netherlands Antilles", "AN");
             countryCodeMapByCountry.Add("New Caledonia", "NC");
             countryCodeMapByCountry.Add("New Zealand", "NZ");
             countryCodeMapByCountry.Add("Nicaragua", "NI");
@@ -422,6 +424,7 @@ namespace GlobalPayments.Api.Utils {
             countryCodeMapByNumericCode.Add("520", "NR");
             countryCodeMapByNumericCode.Add("524", "NP");
             countryCodeMapByNumericCode.Add("528", "NL");
+            countryCodeMapByNumericCode.Add("530", "AN");
             countryCodeMapByNumericCode.Add("531", "CW");
             countryCodeMapByNumericCode.Add("533", "AW");
             countryCodeMapByNumericCode.Add("534", "SX");
@@ -616,7 +619,7 @@ namespace GlobalPayments.Api.Utils {
             }
 
             if (matches.Count > 1)
-                return null;
+                return matches.First().Value;
             return rvalue;
         }
 

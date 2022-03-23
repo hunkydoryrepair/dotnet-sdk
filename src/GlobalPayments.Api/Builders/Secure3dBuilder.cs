@@ -18,6 +18,7 @@ namespace GlobalPayments.Api.Builders {
         internal AuthenticationRequestType AuthenticationRequestType { get; set; }
         internal Address BillingAddress { get; set; }
         internal BrowserData BrowserData { get; set; }
+        internal MobileData MobileData { get; set; }
         internal ChallengeRequestIndicator? ChallengeRequestIndicator { get; set; }
         internal string Currency { get; set; }
         internal string CustomerAccountId { get; set; }
@@ -102,7 +103,6 @@ namespace GlobalPayments.Api.Builders {
         internal bool? WhitelistStatus { get; set; }
         internal string WorkCountryCode { get; set; }
         internal string WorkNumber { get; set; }
-
         public Secure3dBuilder WithAddress(Address address) {
             return WithAddress(address, AddressType.Billing);
         }
@@ -153,6 +153,11 @@ namespace GlobalPayments.Api.Builders {
         }
         public Secure3dBuilder WithBrowserData(BrowserData value) {
             BrowserData = value;
+            return this;
+        }
+        public Secure3dBuilder WithMobileData(MobileData value)
+        {
+            MobileData = value;
             return this;
         }
         public Secure3dBuilder WithChallengeRequestIndicator(ChallengeRequestIndicator value) {

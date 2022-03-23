@@ -30,6 +30,7 @@ namespace GlobalPayments.Api.PaymentMethods {
                 _value = value;
                 CardUtils.ParseTrackData(this);
                 CardType = CardUtils.MapCardType(Pan);
+                ReadyLinkCard = CardUtils.IsReadyLink(CardType, Pan);
             }
         }
 

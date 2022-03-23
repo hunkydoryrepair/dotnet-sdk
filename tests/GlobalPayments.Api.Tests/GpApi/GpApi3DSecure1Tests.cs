@@ -2,6 +2,7 @@
 using GlobalPayments.Api.Entities;
 using GlobalPayments.Api.PaymentMethods;
 using GlobalPayments.Api.Services;
+using GlobalPayments.Api.Utils.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static GlobalPayments.Api.Tests.GpApi.GpApi3DSTestCards;
 
@@ -10,7 +11,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
     public class GpApi3DSecure1Tests : BaseGpApiTests {
         #region Constants
 
-        private const string AUTHENTICATION_SUCCESSFUL = "AUTHENTICATION_SUCCESSFUL";
+        private const string SUCCESS_AUTHENTICATED = "SUCCESS_AUTHENTICATED";
         private const string CHALLENGE_REQUIRED = "CHALLENGE_REQUIRED";
         private const string ENROLLED = "ENROLLED";
         private const string NOT_ENROLLED = "NOT_ENROLLED";
@@ -24,19 +25,23 @@ namespace GlobalPayments.Api.Tests.GpApi {
         [ClassInitialize]
         public static void ClassInitialize(TestContext context) {
             ServicesContainer.ConfigureService(new GpApiConfig {
-                AppId = "P3LRVjtGRGxWQQJDE345mSkEh2KfdAyg",
-                AppKey = "ockJr6pv6KFoGiZA",
+                AppId = APP_ID,
+                AppKey = APP_KEY,
                 Country = "GB",
                 ChallengeNotificationUrl = "https://ensi808o85za.x.pipedream.net/",
                 MethodNotificationUrl = "https://ensi808o85za.x.pipedream.net/",
+                MerchantContactUrl = "https://enp4qhvjseljg.x.pipedream.net/",
+                // RequestLogger = new RequestFileLogger(@"C:\temp\gpapi\requestlog.txt"),
+                RequestLogger = new RequestConsoleLogger(),
+                EnableLogging = true
             });
         }
 
         public GpApi3DSecure1Tests() {
             card = new CreditCardData {
                 Number = CARDHOLDER_ENROLLED_V1,
-                ExpMonth = 12,
-                ExpYear = 2025,
+                ExpMonth = expMonth,
+                ExpYear = expYear,
                 CardHolderName = "John Smith"
             };
         }
@@ -91,7 +96,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
 
         [TestMethod]
         public void CardHolderEnrolled_ChallengeRequired_v1_TokenizedCard() {
-            var tokenizedCard = new CreditCardData() {
+            var tokenizedCard = new CreditCardData {
                 Token = card.Tokenize()
             };
 
@@ -147,28 +152,6 @@ namespace GlobalPayments.Api.Tests.GpApi {
                 .Execute();
 
             AssertThreeDSResponse(secureEcom, CHALLENGE_REQUIRED);
-        }
-
-        [TestMethod]
-        [Ignore]
-        public void CardHolderEnrolled_ChallengeRequired_v1_Refund() {
-            var secureEcom = Secure3dService.CheckEnrollment(card)
-                .WithCurrency(Currency)
-                .WithAmount(Amount)
-                .WithTransactionType(TransactionType.Refund)
-                .Execute();
-
-            AssertThreeDSResponse(secureEcom, CHALLENGE_REQUIRED);
-
-            var saleSecureEcom = Secure3dService.CheckEnrollment(card)
-                .WithCurrency(Currency)
-                .WithAmount(Amount)
-                .WithTransactionType(TransactionType.Sale)
-                .Execute();
-
-            AssertThreeDSResponse(saleSecureEcom, CHALLENGE_REQUIRED);
-
-            Assert.AreNotSame(secureEcom, saleSecureEcom);
         }
 
         [TestMethod]
@@ -231,7 +214,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
 
             AssertThreeDSResponse(secureEcom, CHALLENGE_REQUIRED);
 
-            // Perform ACS authetication
+            // Perform ACS authentication
             var acsClient = new GpApi3DSecureAcsClient(secureEcom.IssuerAcsUrl);
             string payerAuthenticationResponse;
             string authResponse = acsClient.Authenticate_v1(secureEcom, out payerAuthenticationResponse);
@@ -244,7 +227,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
                 .Execute();
 
             Assert.IsNotNull(secureEcom);
-            Assert.AreEqual(AUTHENTICATION_SUCCESSFUL, secureEcom.Status);
+            Assert.AreEqual(SUCCESS_AUTHENTICATED, secureEcom.Status);
         }
 
         [TestMethod]
@@ -259,7 +242,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
 
             AssertThreeDSResponse(secureEcom, CHALLENGE_REQUIRED);
 
-            // Perform ACS authetication
+            // Perform ACS authentication
             var acsClient = new GpApi3DSecureAcsClient(secureEcom.IssuerAcsUrl);
             string payerAuthenticationResponse;
             string authResponse = acsClient.Authenticate_v1(secureEcom, out payerAuthenticationResponse);
@@ -273,7 +256,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
                 .Execute();
 
             Assert.IsNotNull(secureEcom);
-            Assert.AreEqual(AUTHENTICATION_SUCCESSFUL, secureEcom.Status);
+            Assert.AreEqual(SUCCESS_AUTHENTICATED, secureEcom.Status);
 
             var exceptionCaught = false;
             try {
@@ -289,7 +272,7 @@ namespace GlobalPayments.Api.Tests.GpApi {
                 Assert.AreEqual("DUPLICATE_ACTION", ex.ResponseCode);
                 Assert.AreEqual(
                     "Status Code: Conflict - Idempotency Key seen before: id=" + secureEcom.ServerTransactionId +
-                    ", status=AUTHENTICATION_SUCCESSFUL", ex.Message);
+                    ", status=SUCCESS_AUTHENTICATED", ex.Message);
             }
             finally {
                 Assert.IsTrue(exceptionCaught);

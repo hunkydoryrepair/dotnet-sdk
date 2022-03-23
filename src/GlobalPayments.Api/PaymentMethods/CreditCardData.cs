@@ -61,12 +61,15 @@ namespace GlobalPayments.Api.PaymentMethods {
                     CardType = CardUtils.MapCardType(_number);
                     FleetCard = CardUtils.IsFleet(CardType, _number);
                     PurchaseCard = CardUtils.IsPurchase(CardType, _number);
+                    ReadyLinkCard = CardUtils.IsReadyLink(CardType, _number);
                 }
                 catch (Exception) {
                     CardType = "Unknown";
                 }
             }
         }
+
+       public ManualEntryMethod? EntryMethod { get; set; }
 
         /// <summary>
         /// The card's expiration month.
@@ -113,7 +116,7 @@ namespace GlobalPayments.Api.PaymentMethods {
             CvnPresenceIndicator = CvnPresenceIndicator.NotRequested;
         }
 
-        public AuthorizationBuilder GetDccRate(DccRateType dccRateType, DccProcessor dccProcessor) {
+        public AuthorizationBuilder GetDccRate(DccRateType dccRateType = DccRateType.None, DccProcessor dccProcessor = DccProcessor.None) {
             DccRateData dccRateData = new DccRateData {
                 DccRateType = dccRateType,
                 DccProcessor = dccProcessor
@@ -191,29 +194,9 @@ namespace GlobalPayments.Api.PaymentMethods {
                 return false;
             }
         }
-
-        /// <summary>
-        /// Detokenizes payment method
-        /// </summary>
-        /// <param name="configName"></param>
-        /// <returns></returns>
-        public CreditCardData Detokenize(string configName = "default") {
-            if (string.IsNullOrEmpty(Token)) {
-                throw new BuilderException("Token cannot be null");
-            }
-
-            var transaction = new ManagementBuilder(TransactionType.Detokenize)
-                .WithPaymentMethod(this)
-                .Execute(configName);
-
-            var card = this.MemberwiseClone() as CreditCardData;
-            card.Token = null;
-            card.Number = transaction.CardNumber;
-            card.CardType = transaction.CardType;
-            card.ExpMonth = transaction.CardExpMonth;
-            card.ExpYear = transaction.CardExpYear;
-
-            return card;
+        public bool HasInAppPaymentData()
+        {
+            return (!string.IsNullOrEmpty(this.Token) && !string.IsNullOrEmpty(this.MobileType));
         }
     }
 }

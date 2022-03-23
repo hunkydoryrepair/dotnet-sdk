@@ -147,9 +147,9 @@ namespace GlobalPayments.Api.Entities {
         TokenDelete = 1 << 26,
 
         /// <summary>
-        /// Indicates a verify authentication 3DS2 call
+        /// Indicates a confirm call
         /// </summary>
-        VerifyAuthentication = 1 << 27,
+        Confirm = 1 << 27,
 
         /// <summary>
         /// Indicates an Initiate Authentication 3DS2 call
@@ -196,11 +196,6 @@ namespace GlobalPayments.Api.Entities {
         ///
         /// </summary>
         CashAdvance = 1L << 36,
-
-        /// <summary>
-        /// Indicates a detokenization transaction
-        /// </summary>
-        Detokenize = 1L << 37,
 
         /// <summary>
         /// Indicates a dispute acceptance
@@ -317,5 +312,20 @@ namespace GlobalPayments.Api.Entities {
         /// Indicates a transaction reauthorization
         /// </summary>
         Reauth = 1L << 60,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        SiteConfig = 1L << 61,
+
+        /// <summary>
+        /// 
+        /// </summary>
+        TimeRequest = 1L << 62,
+
+        /// <summary>
+        /// Get Token Information for the given token
+        /// </summary>
+        GetTokenInfo = 1L << 63,
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GlobalPayments.Api.Utils;
+using System;
 
 namespace GlobalPayments.Api.Entities {
     internal enum AliasAction {
@@ -60,7 +61,13 @@ namespace GlobalPayments.Api.Entities {
         /// <summary>
         /// Indicates a genius terminal
         /// </summary>
-        GENIUS
+        GENIUS,
+
+        /// <summary>
+        /// Indicates a Nucleus terminal
+        /// </summary>
+        NUCLEUS_SATURN_1000
+
     }
 
     /// <summary>
@@ -145,7 +152,9 @@ namespace GlobalPayments.Api.Entities {
 
         Other = 1 << 8,
 
-        AltPayment = 1 << 9
+        APM = 1 << 9,
+
+        Ewic = 1 << 10
     }
 
     /// <summary>
@@ -165,7 +174,28 @@ namespace GlobalPayments.Api.Entities {
         /// <summary>
         /// Indicates proximity/contactless entry.
         /// </summary>
-        Proximity
+        Proximity,
+    }
+
+    /// <summary>
+    /// Indicates how the payment method data was obtained.
+    /// </summary>
+    public enum ManualEntryMethod
+    {
+        /// <summary>
+        /// Indicates manual entry.
+        /// </summary>
+        Moto,
+
+        /// <summary>
+        /// Indicates swipe entry.
+        /// </summary>
+        Mail,
+
+        /// <summary>
+        /// Indicates proximity/contactless entry.
+        /// </summary>
+        Phone
     }
 
     /// <summary>
@@ -260,7 +290,17 @@ namespace GlobalPayments.Api.Entities {
         /// <summary>
         /// Indicates a level II transaction
         /// </summary>
-        Level_III = 1 << 13
+        Level_III = 1 << 13,
+
+        /// <summary>
+        /// Indicates a mobile transaction.
+        /// </summary>
+        DecryptedMobile = 1 << 14,
+
+        /// <summary>
+        /// Indicates an alternative payment method transaction.
+        /// </summary>
+        AlternativePaymentMethod = 1 << 15
     }
 
     /// <summary>
@@ -311,12 +351,20 @@ namespace GlobalPayments.Api.Entities {
         /// <summary>
         /// Indicates a checking account.
         /// </summary>
+        [Map(Target.GP_API, "CHECKING")] 
         CHECKING,
 
         /// <summary>
         /// Indicates a savings account.
         /// </summary>
-        SAVINGS
+        [Map(Target.GP_API, "SAVING")]
+        SAVINGS,
+
+        /// <summary>
+        /// Indicates a credit account.
+        /// </summary>
+        [Map(Target.GP_API, "CREDIT")]
+        CREDIT
     }
 
     /// <summary>
@@ -326,16 +374,19 @@ namespace GlobalPayments.Api.Entities {
         /// <summary>
         /// Indicates a personal check.
         /// </summary>
+        [Map(Target.NWS, "0")]
         PERSONAL,
 
         /// <summary>
         /// Indicates a business check.
         /// </summary>
+        [Map(Target.NWS, "3")]
         BUSINESS,
 
         /// <summary>
         /// Indicates a payroll check.
         /// </summary>
+        [Map(Target.NWS, "1")]
         PAYROLL
     }
 
@@ -649,16 +700,28 @@ namespace GlobalPayments.Api.Entities {
     public static class MobilePaymentMethodType {
         public const string APPLEPAY = "apple-pay";
         public const string GOOGLEPAY = "pay-with-google";
-
     }
 
     /// <summary>
-    /// Indicates a reason for the transaction.
+    /// Indicates the GooglePay and ApplePay.
     /// </summary>
-    /// <remarks>
-    /// This is typically used for returns/reversals.
-    /// </remarks>
-    public enum ReasonCode {
+    public static class EncyptedMobileType
+    {
+        public const string APPLE_PAY = "APPLEPAY";
+        public const string GOOGLE_PAY = "PAY_BY_GOOGLE";
+    }
+
+    public static class DigitalWalletTokenFormat{
+        public const string CARD_NUMBER = "CARD_NUMBER";
+        public const string CARD_TOKEN = "CARD_TOKEN";
+    }
+/// <summary>
+/// Indicates a reason for the transaction.
+/// </summary>
+/// <remarks>
+/// This is typically used for returns/reversals.
+/// </remarks>
+public enum ReasonCode {
         /// <summary>
         /// Indicates fraud.
         /// </summary>
@@ -788,6 +851,7 @@ namespace GlobalPayments.Api.Entities {
         OSUUSPANKKI,
         OXXO,
         PAGO_FACIL,
+        PAYPAL,
         PAYPOST_LIETUVOS_PASTAS,
         PAYSAFECARD,
         PAYSBUY_CASH,
@@ -832,7 +896,8 @@ namespace GlobalPayments.Api.Entities {
         WEBPAY,
         WECHAT_PAY,
         ZIMPLER,
-        UK_DIRECT_DEBIT
+        UK_DIRECT_DEBIT,
+        PAYBYBANKAPP
     }
 
     public enum CardType {
@@ -974,5 +1039,10 @@ namespace GlobalPayments.Api.Entities {
         Forced,	
         EndOfShift,	
         //EndOfDay	
+    }
+
+    public enum ReportOutput {
+        Print,
+        ReturnData
     }
 }

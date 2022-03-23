@@ -40,6 +40,8 @@ namespace GlobalPayments.Api.Builders {
         internal IEnumerable<DisputeDocument> DisputeDocuments { get; set; }
         internal string DisputeId { get; set; }
         internal string DynamicDescriptor { get; set; }
+        internal eCheck BankTransferDetails { get; set; }
+        internal DccRateData DccRateData { get; set; }
         internal decimal? Gratuity { get; set; }
         internal string IdempotencyKey { get; set;  }
         internal string InvoiceNumber { get; set; }
@@ -78,6 +80,10 @@ namespace GlobalPayments.Api.Builders {
         internal string Timestamp { get; set; }
         internal VoidReason? VoidReason { get; set; }
         internal bool AllowDuplicates { get; set; }
+        internal CardHolderAuthenticationMethod? AuthenticationMethod { get; set; }
+        internal string TagData { get; set; }
+        //internal string EWICIssuingEntity { get; set; }
+        //internal CustomerData AuthorizationCustomerData { get; set; }
 
         /// <summary>
         /// Sets the current transaction's amount.
@@ -217,6 +223,20 @@ namespace GlobalPayments.Api.Builders {
         }
 
         /// <summary>
+        /// Set the election check information
+        /// </summary>
+        /// <remarks>
+        /// This value is sent during the authorization process and is displayed
+        /// in the consumer's account.
+        /// </remarks>
+        /// <param name="value">eCheck</param>
+        /// <returns>AuthorizationBuilder</returns>
+        public ManagementBuilder WithBankTransferDetails(eCheck value) {
+            BankTransferDetails = value;
+            return this;
+        }
+
+        /// <summary>
         /// Sets the transaction's dynamic descriptor.
         /// </summary>
         /// <remarks>
@@ -225,7 +245,8 @@ namespace GlobalPayments.Api.Builders {
         /// </remarks>
         /// <param name="value">The dynamic descriptor</param>
         /// <returns>AuthorizationBuilder</returns>
-        public ManagementBuilder WithDynamicDescriptor(string value) {
+        public ManagementBuilder WithDynamicDescriptor(string value)
+        {
             DynamicDescriptor = value;
             return this;
         }
@@ -410,6 +431,9 @@ namespace GlobalPayments.Api.Builders {
             Validations.For(TransactionType.Capture | TransactionType.Edit | TransactionType.Hold | TransactionType.Release)
                 .Check(() => PaymentMethod).IsNotNull();
 
+            Validations.For(TransactionType.Capture | TransactionType.Edit | TransactionType.Hold | TransactionType.Release | TransactionType.Reauth)
+                .Check(() => TransactionId).IsNotNull();
+
             // TODO: Need level validations
             //Validations.For(TransactionType.Edit).With(TransactionModifier.Level_II)
             //    .Check(() => TaxType).IsNotNull();
@@ -460,6 +484,26 @@ namespace GlobalPayments.Api.Builders {
         }
         public ManagementBuilder WithForceGatewayTimeout(bool value) {
             ForceGatewayTimeout = value;
+            return this;
+        }
+
+        public ManagementBuilder WithAuthenticatioNMethod(CardHolderAuthenticationMethod value) {
+            AuthenticationMethod = value;
+            return this;
+        }
+
+        public ManagementBuilder WithTagData(string value) {
+            TagData = value;
+            return this;
+        }
+
+        public ManagementBuilder WithEWICIssuingEntity(string value) {
+            EWICIssuingEntity = value;
+            return this;
+        }
+
+        public ManagementBuilder WithDccRateData(DccRateData value){
+            DccRateData = value;
             return this;
         }
     }

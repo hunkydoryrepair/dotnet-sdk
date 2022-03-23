@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using GlobalPayments.Api.Builders;
+using GlobalPayments.Api.Entities.Billing;
 using GlobalPayments.Api.Entities.PayFac;
 using GlobalPayments.Api.Gateways.Events;
 using GlobalPayments.Api.Network.Entities;
@@ -11,6 +12,11 @@ namespace GlobalPayments.Api.Entities {
     /// Transaction response.
     /// </summary>
     public class Transaction {
+        /// <summary>
+        /// The Address used in the transaction.
+        /// </summary>
+        public Address Address { get; set; }
+
         /// <summary>
         /// The authorized amount.
         /// </summary>
@@ -51,6 +57,11 @@ namespace GlobalPayments.Api.Entities {
         public string AvsResponseMessage { get; set; }
 
         /// <summary>
+        /// The address verification service (AVS) address response.
+        /// </summary>
+        public string AvsAddressResponse { get; set; }
+
+        /// <summary>
         /// The balance on the account after the transaction.
         /// </summary>
         public decimal? BalanceAmount { get; set; }
@@ -62,6 +73,21 @@ namespace GlobalPayments.Api.Entities {
 
         public string CardBrandTransactionId { get; set; }
 
+        public AlternativePaymentResponse AlternativePaymentResponse {
+            get
+            {
+                return TransactionReference?.AlternativePaymentResponse;
+            }
+            set
+            {
+                if(TransactionReference == null)
+                {
+                    TransactionReference = new TransactionReference();
+                }
+                TransactionReference.AlternativePaymentResponse = value;
+            }
+        }
+
         /// <summary>
         /// The type of card used in the transaction.
         /// </summary>
@@ -72,6 +98,10 @@ namespace GlobalPayments.Api.Entities {
         /// the transaction.
         /// </summary>
         public string CardLast4 { get; set; }
+
+        public string FingerPrint { get; set; }
+
+        public string FingerPrintIndicator { get; set; }
 
         /// <summary>
         /// The card number used in the transaction.
@@ -87,6 +117,11 @@ namespace GlobalPayments.Api.Entities {
         /// The card expiry year used in the transaction.
         /// </summary>
         public int? CardExpYear { get; set; }
+
+        /// <summary>
+        /// The cardholder name used in the transaction.
+        /// </summary>
+        public string CardholderName { get; set; }
 
         /// <summary>
         /// The consumer authentication (3DSecure) verification
@@ -116,6 +151,11 @@ namespace GlobalPayments.Api.Entities {
         /// The fee amount to charge
         /// </summary>
         public decimal ConvenienceFee { get; set; }
+
+        /// <summary>
+        /// The CustomerData used in the transaction.
+        /// </summary>
+        public Customer CustomerData { get; set; }
 
         public NtsData NTSData {
             get {
@@ -198,6 +238,10 @@ namespace GlobalPayments.Api.Entities {
         /// </summary>
         public string EmvIssuerResponse { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public FraudResponse FraudResponse;
         /// <summary>
         /// The host response date
         /// </summary>
@@ -298,6 +342,11 @@ namespace GlobalPayments.Api.Entities {
         public string TransactionDescriptor { get; set; }
 
         /// <summary>
+        /// The result of an administrative Time Request
+        /// </summary>
+        public string TimeResponseFromHeartland { get; set; }
+
+        /// <summary>
         /// The gateway transaction ID of the transaction.
         /// </summary>
         public string TransactionId {
@@ -333,6 +382,12 @@ namespace GlobalPayments.Api.Entities {
         /// The payment token returned in the transaction.
         /// </summary>
         public string Token { get; set; }
+
+        /// <summary>
+        /// The token data returned for the specific token
+        /// </summary>
+        public TokenData TokenData { get; set; }
+        
 
         internal GiftCard GiftCard { get; set; }
 
@@ -441,6 +496,16 @@ namespace GlobalPayments.Api.Entities {
                 .WithForcedReversal(force);
         }
 
+        /// <summary>
+        /// Confirm an original transaction. For now it is used for the APM transactions with PayPal
+        /// </summary>
+        public ManagementBuilder Confirm(decimal? amount = null)
+        {
+            return new ManagementBuilder(TransactionType.Confirm)
+                .WithPaymentMethod(this.TransactionReference)
+                .WithAmount(amount);
+        }
+
         public ManagementBuilder Increment(decimal? amount = null) {
             return new ManagementBuilder(TransactionType.Increment).WithAmount(amount).WithPaymentMethod(TransactionReference);
         }
@@ -511,6 +576,6 @@ namespace GlobalPayments.Api.Entities {
 
             return trans;
         }
-
+        public List<CheckResponseErrorMessage> CheckResponseErrorMessages { get; set; }
     }
 }

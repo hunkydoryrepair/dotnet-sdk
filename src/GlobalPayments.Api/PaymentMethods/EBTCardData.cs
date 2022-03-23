@@ -15,6 +15,7 @@ namespace GlobalPayments.Api.PaymentMethods {
         public string Number { get; set; }
         public bool ReaderPresent { get; set; }
         public string SerialNumber { get; set; }
+        public ManualEntryMethod? EntryMethod { get; set; }
         public string ShortExpiry {
             get {
                 var month = (ExpMonth.HasValue) ? ExpMonth.ToString().PadLeft(2, '0') : string.Empty;
@@ -22,8 +23,7 @@ namespace GlobalPayments.Api.PaymentMethods {
                 return year + month;
             }
         }
-        public EBTCardData() {
-        }
+        public EBTCardData() {  }
         public EBTCardData(EbtCardType cardType) {
             EbtCardType = cardType;
         }

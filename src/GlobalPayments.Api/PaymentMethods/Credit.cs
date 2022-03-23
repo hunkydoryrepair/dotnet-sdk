@@ -1,11 +1,12 @@
 ﻿using GlobalPayments.Api.Builders;
 using GlobalPayments.Api.Entities;
+using GlobalPayments.Api.Entities.Billing;
 
 namespace GlobalPayments.Api.PaymentMethods {
     /// <summary>
     /// Use credit as a payment method.
     /// </summary>
-    public abstract class Credit : IPaymentMethod, IEncryptable, ITokenizable, IChargable, IAuthable, IRefundable, IReversable, IVerifiable, IPrePaid, IBalanceable, ISecure3d {
+    public abstract class Credit : IPaymentMethod, IEncryptable, ITokenizable, IChargable, IAuthable, IRefundable, IReversable, IVerifiable, IPrePaid, IBalanceable, ISecure3d, IPinProtected {
         /// <summary>
         /// The name of the issuing Bank
         /// </summary>
@@ -44,9 +45,15 @@ namespace GlobalPayments.Api.PaymentMethods {
         /// </summary>
         public string MobileType { get; set; }
 
+        public string Cryptogram { get; set; }
+
+        public string Eci { get; set; }
+
         public bool FleetCard { get; set; }
 
         public bool PurchaseCard { get; set; }
+        public bool ReadyLinkCard { get; set; }
+        public string PinBlock { get; set; }
 
         public Credit() {
             CardType = "Unknown";
@@ -95,6 +102,14 @@ namespace GlobalPayments.Api.PaymentMethods {
             return new AuthorizationBuilder(TransactionType.Balance, this).WithBalanceInquiryType(inquiry);
         }
 
+        public AuthorizationBuilder CashAdvance(decimal? amount = null) {
+            return new AuthorizationBuilder(TransactionType.CashAdvance, this).WithAmount(amount);
+        }
+
+        public AuthorizationBuilder Payment(decimal? amount = null) {
+            return new AuthorizationBuilder(TransactionType.Payment, this).WithAmount(amount);
+        }
+
         /// <summary>
         /// Refunds the payment method.
         /// </summary>
@@ -122,40 +137,53 @@ namespace GlobalPayments.Api.PaymentMethods {
         }
 
         /// <summary>
+        /// Gets token information for the specified token
+        /// </summary>
+        public Transaction GetTokenInformation(string configName = "default") {
+            var response = new AuthorizationBuilder(TransactionType.GetTokenInfo, this).Execute(configName);
+            return response;
+        }
+
+        /// <summary>
         /// Tokenizes the payment method, verifying the payment method
         /// with the issuer in the process.
         /// </summary>
         /// <returns>AuthorizationBuilder</returns>
-        public string Tokenize(string configName = "default") {
-            return Tokenize(true, configName);
+        public string Tokenize(string configName = "default", PaymentMethodUsageMode paymentMethodUsageMode = PaymentMethodUsageMode.Multiple)
+        {
+            return Tokenize(true, configName, paymentMethodUsageMode);
         }
-        public string Tokenize(bool verifyCard, string configName = "default") {
+
+        public string Tokenize(bool verifyCard, string configName = "default", PaymentMethodUsageMode paymentMethodUsageMode = PaymentMethodUsageMode.Multiple)
+        {
             TransactionType type = verifyCard ? TransactionType.Verify : TransactionType.Tokenize;
 
-            var response =  new AuthorizationBuilder(type, this)
+            var response = new AuthorizationBuilder(type, this)
                 .WithRequestMultiUseToken(verifyCard)
-                .WithTokenUsageMode(TokenUsageMode.Multiple)
+                .WithPaymentMethodUsageMode(paymentMethodUsageMode)
                 .Execute(configName);
             return response.Token;
         }
 
-        /// <summary>
-        /// Detokenizes payment method
-        /// </summary>
-        /// <param name="configName"></param>
-        /// <returns></returns>
-        ITokenizable ITokenizable.Detokenize(string configName) {
-            if (string.IsNullOrEmpty(Token)) {
-                throw new BuilderException("Token cannot be null");
+        public string Tokenize(bool verifyCard, Address billingAddress, Customer customerData, string configName = "default")
+        {
+            TransactionType type = verifyCard ? TransactionType.Verify : TransactionType.Tokenize;
+
+            var builder = new AuthorizationBuilder(type, this)
+                .WithRequestMultiUseToken(verifyCard)
+                .WithPaymentMethodUsageMode(PaymentMethodUsageMode.Multiple);
+
+            if (billingAddress != null)
+            {
+                builder = builder.WithAddress(billingAddress);
+            }
+            if (customerData != null)
+            {
+                builder = builder.WithCustomerData(customerData);
             }
 
-            var transaction = new ManagementBuilder(TransactionType.Detokenize)
-                .WithPaymentMethod(this)
-                .Execute(configName);
-
-            CardType = transaction.CardType;
-
-            return this;
+            var response = builder.Execute(configName);
+            return response.Token;
         }
 
         /// <summary>
@@ -167,15 +195,10 @@ namespace GlobalPayments.Api.PaymentMethods {
                 throw new BuilderException("Token cannot be null");
             }
 
-            try {
-                new ManagementBuilder(TransactionType.TokenUpdate)
-                    .WithPaymentMethod(this)
-                    .Execute(configName);
-                return true;
-            }
-            catch (ApiException) {
-                return false;
-            }
+            new ManagementBuilder(TransactionType.TokenUpdate)
+                .WithPaymentMethod(this)
+                .Execute(configName);
+            return true;
         }
 
         /// <summary>
@@ -187,15 +210,10 @@ namespace GlobalPayments.Api.PaymentMethods {
                 throw new BuilderException("Token cannot be null");
             }
 
-            try {
-                new ManagementBuilder(TransactionType.TokenDelete)
-                    .WithPaymentMethod(this)
-                    .Execute(configName);
-                return true;
-            }
-            catch (ApiException) {
-                return false;
-            }
+            new ManagementBuilder(TransactionType.TokenDelete)
+                .WithPaymentMethod(this)
+                .Execute(configName);
+            return true;
         }
     }
 }

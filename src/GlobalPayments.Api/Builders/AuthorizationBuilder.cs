@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using GlobalPayments.Api.Entities;
 using GlobalPayments.Api.Entities.Billing;
+using GlobalPayments.Api.Network.Elements;
 using GlobalPayments.Api.Network.Entities;
 using GlobalPayments.Api.PaymentMethods;
 
@@ -18,6 +19,7 @@ namespace GlobalPayments.Api.Builders {
         internal bool AllowPartialAuth { get; set; }
         internal decimal? Amount { get; set; }
         internal bool AmountEstimated { get; set; }
+        internal decimal? AmountTaxed { get; set; }
         internal decimal? AuthAmount { get; set; }
         internal AutoSubstantiation AutoSubstantiation { get; set; }
         internal InquiryType? BalanceInquiryType { get; set; }
@@ -42,21 +44,29 @@ namespace GlobalPayments.Api.Builders {
         internal EmvFallbackCondition? EmvFallbackCondition { get; set; }
         internal EmvLastChipRead? EmvLastChipRead { get; set; }
         internal FraudFilterMode FraudFilterMode { get; set; }
+        internal FraudRuleCollection FraudRules { get; set; }
         internal decimal? Gratuity { get; set; }
         internal decimal? ConvenienceAmount { get; set; }
         internal decimal? ShippingAmt { get; set; }
+        internal decimal? ShippingDiscount { get; set; }
+        internal OrderDetails OrderDetails { get; set; }
         internal HostedPaymentData HostedPaymentData { get; set; }
         internal string IdempotencyKey { get; set; }
         internal string InvoiceNumber { get; set; }
         internal bool Level2Request { get; set; }
         internal LodgingData LodgingData { get; set; }
         internal string MessageAuthenticationCode { get; set; }
-        internal List<string[]> MiscProductData { get; set; }
+        internal List<Product> MiscProductData { get; set; }
         internal string OfflineAuthCode { get; set; }
         internal bool OneTimePayment { get; set; }
         internal string OrderId { get; set; }
         internal string PaymentApplicationVersion { get; set; }
-        internal TokenUsageMode? TokenUsageMode { get; set; }
+        internal PaymentMethodUsageMode? PaymentMethodUsageMode { get; set; }
+        public PhoneNumber HomePhone { get; set; }
+        public PhoneNumber WorkPhone { get; set; }
+        public PhoneNumber ShippingPhone { get; set; }
+        public string PaymentLinkId { get; set; }
+        public PhoneNumber MobilePhone { get; set; }
         internal string PosSequenceNumber { get; set; }
         internal string ProductId { get; set; }
         internal RecurringSequence? RecurringSequence { get; set; }
@@ -65,6 +75,7 @@ namespace GlobalPayments.Api.Builders {
         internal GiftCard ReplacementCard { get; set; }
         internal ReversalReasonCode? ReversalReasonCode { get; set; }
         internal string ScheduleId { get; set; }
+        internal bool? ShareTokenWithGroup { get; set; } = null;
         internal Address ShippingAddress { get; set; }
         internal StoredCredential StoredCredential { get; set; }
         internal Dictionary<string, List<string[]>> SupplementaryData { get; set; }
@@ -76,8 +87,11 @@ namespace GlobalPayments.Api.Builders {
         internal string ShiftNumber { get; set; }
         internal string ClerkId { get; set; }
         internal string TransportData { get; set; }
+        internal CardHolderAuthenticationMethod? AuthenticationMethod { get; set; }
+        internal RecordDataEntry POSSiteConfigRecord { get; set; }
+        internal string CheckCustomerId { get; set; }
+        internal string RawMICRData { get; set; }
         internal StoredCredentialInitiator? TransactionInitiator { get; set; }
-
         internal bool HasEmvFallbackData {
             get {
                 return (EmvFallbackCondition != null || EmvLastChipRead != null || !string.IsNullOrEmpty(PaymentApplicationVersion));
@@ -156,6 +170,12 @@ namespace GlobalPayments.Api.Builders {
             AmountEstimated = value;
             return this;
         }
+
+        public AuthorizationBuilder WithAmountTaxed(decimal? value) {
+            AmountTaxed = value;
+            return this;
+        }
+
 
         /// <summary>
         /// Sets the transaction's authorization amount; where applicable.
@@ -277,6 +297,14 @@ namespace GlobalPayments.Api.Builders {
             return this;
         }
 
+        public AuthorizationBuilder WithFraudFilter(FraudFilterMode fraudFilter, FraudRuleCollection fraudRules = null)
+        {
+            FraudFilterMode = fraudFilter;
+            if(fraudRules != null)
+                FraudRules = fraudRules;
+            return this;
+        }
+
         public AuthorizationBuilder WithCustomData(params string[] values) {
             if (CustomData == null) {
                 CustomData = new List<string[]>();
@@ -324,6 +352,11 @@ namespace GlobalPayments.Api.Builders {
         /// <returns>AuthorizationBuilder</returns>
         public AuthorizationBuilder WithCvn(string value) {
             Cvn = value;
+            return this;
+        }
+
+        public AuthorizationBuilder WithPOSSiteConfigRecord(RecordDataEntry value) {
+            POSSiteConfigRecord = value;
             return this;
         }
 
@@ -435,6 +468,28 @@ namespace GlobalPayments.Api.Builders {
         }
 
         /// <summary>
+        /// Set the request shippingDiscount; where applicable.
+        /// </summary>
+        /// <param name="value">The shippingDiscount</param>
+        /// <returns>AuthorizationBuilder</returns>
+        public AuthorizationBuilder WithShippingDiscount(decimal? value)
+        {
+            ShippingDiscount = value;
+            return this;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value">The OrderDetails</param>
+        /// <returns>AuthorizationBuilder</returns>
+        public AuthorizationBuilder WithOrderDetails(OrderDetails value)
+        {
+            OrderDetails = value;
+            return this;
+        }
+
+        /// <summary>
         /// Additional hosted payment specific information for Realex HPP implementation.
         /// </summary>
         /// <param name="value">The hosted payment data</param>
@@ -504,12 +559,8 @@ namespace GlobalPayments.Api.Builders {
             return this;
         }
 
-        public AuthorizationBuilder WithMiscProductData(params string[] values) {
-            if (MiscProductData == null) {
-                MiscProductData = new List<string[]>();
-            }
-            MiscProductData.Add(values);
-
+        public AuthorizationBuilder WithMiscProductData(List<Product> values) {
+            MiscProductData = values;
             return this;
         }
 
@@ -558,8 +609,8 @@ namespace GlobalPayments.Api.Builders {
             return this;
         }
 
-        public AuthorizationBuilder WithTokenUsageMode(TokenUsageMode? value) {
-            TokenUsageMode = value;
+        public AuthorizationBuilder WithPaymentMethodUsageMode(PaymentMethodUsageMode? value) {
+            PaymentMethodUsageMode = value;
             return this;
         }
 
@@ -657,6 +708,16 @@ namespace GlobalPayments.Api.Builders {
             return this;
         }
 
+        /// <summary>
+        /// Sets the ShareTokenWithGroup value to be used for updating the BillPay token.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>AuthorizationBuilder</returns>
+        public AuthorizationBuilder WithShareTokenWithGroup(bool? value) {
+            ShareTokenWithGroup = value;
+            return this;
+        }
+
         public AuthorizationBuilder WithStoredCredential(StoredCredential value) {
             StoredCredential = value;
             return this;
@@ -708,7 +769,7 @@ namespace GlobalPayments.Api.Builders {
             return this;
         }
 
-        internal AuthorizationBuilder WithModifier(TransactionModifier value) {
+        public AuthorizationBuilder WithModifier(TransactionModifier value) {
             TransactionModifier = value;
             return this;
         }
@@ -840,6 +901,39 @@ namespace GlobalPayments.Api.Builders {
             Validations.For(PaymentMethodType.Recurring).Check(() => ShippingAmt).IsNull();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="phoneCountryCode"></param>
+        /// <param name="number"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public AuthorizationBuilder WithPhoneNumber(string phoneCountryCode, string number, PhoneNumberType type)
+        {
+            var phoneNumber = new PhoneNumber
+            {
+                CountryCode = phoneCountryCode,
+                Number = number
+            };
+            switch (type) {
+                case PhoneNumberType.Home:
+                    HomePhone = phoneNumber;
+                    break;
+                case PhoneNumberType.Work:
+                    WorkPhone = phoneNumber;
+                    break;
+                case PhoneNumberType.Shipping:
+                    ShippingPhone = phoneNumber;
+                    break;
+                case PhoneNumberType.Mobile:
+                    MobilePhone = phoneNumber;
+                    break;
+                default:
+                    break;
+            }
+            return this;
+        }
+
         public AuthorizationBuilder WithForceGatewayTimeout(bool value) {
             ForceGatewayTimeout = value;
             return this;
@@ -866,45 +960,85 @@ namespace GlobalPayments.Api.Builders {
             ShiftNumber = value;
             return this;
         }
+
         public AuthorizationBuilder WithTransportData(string value) {
             TransportData = value;
             return this;
         }
+
         public AuthorizationBuilder WithBatchNumber(int value) {
             BatchNumber = value;
             return this;
         }
+
         public AuthorizationBuilder WithBatchNumber(int batchNumber, int sequenceNumber) {
             BatchNumber = batchNumber;
             SequenceNumber = sequenceNumber;
             return this;
         }
+
         public AuthorizationBuilder WithCompanyId(string value) {
             CompanyId = value;
             return this;
         }
+
         public AuthorizationBuilder WithFleetData(FleetData value) {
             FleetData = value;
             return this;
         }
+
         public AuthorizationBuilder WithIssuerData(Dictionary<DE62_CardIssuerEntryTag, string> value) {
             IssuerData = value;
             return this;
         }
+
         public AuthorizationBuilder WithSystemTraceAuditNumber(int value) {
             SystemTraceAuditNumber = value;
             return this;
-        }
+        }        
+
         public AuthorizationBuilder WithTransactionMatchingData(TransactionMatchingData value) {
             TransactionMatchingData = value;
             return this;
         }
+
         public AuthorizationBuilder WithChipCondition(EmvLastChipRead value) {
             EmvChipCondition = value;
             return this;
         }
+
         public AuthorizationBuilder WithProductData(ProductData value) {
             ProductData = value;
+            return this;
+        }
+
+        public AuthorizationBuilder WithEWICData(EWICData eWicData) {
+            EwicData = eWicData;
+            return this;
+        }
+
+        public AuthorizationBuilder WithAuthenticationMethod(CardHolderAuthenticationMethod value) {
+            AuthenticationMethod = value;
+            return this;
+        }
+
+        public AuthorizationBuilder WithEWICIssuingEntity(string value) {
+            EWICIssuingEntity = value;
+            return this;
+        }
+
+        public AuthorizationBuilder WithCheckCustomerId(string value) {
+            CheckCustomerId = value;
+            return this;
+        }
+
+        public AuthorizationBuilder WithRawMICRData(string value) {
+            RawMICRData = value;
+            return this;
+        }
+
+        public AuthorizationBuilder WithPaymentLinkId(string value) {
+            PaymentLinkId = value;
             return this;
         }
     }
